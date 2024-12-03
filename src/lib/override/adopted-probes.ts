@@ -9,13 +9,17 @@ import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
 import { countries } from 'countries-list';
 
-type KnexError = Error & { errno?: number, message: string };
+type KnexError = Error & { errno?: number, message: string, sqlMessage: string };
 
 const logger = scopedLogger('adopted-probes');
 
 export const ADOPTED_PROBES_TABLE = 'gp_adopted_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
+
 export const ER_DUP_ENTRY_CODE = 1062;
+const PRIMARY_IP_IN_ANOTHER_PROBE_ALT_IPS_ERROR_CODE = 5002;
+const ALT_IP_IS_ANOTHER_PROBE_PRIMARY_IP_ERROR_CODE = 5003;
+const ALT_IP_IN_ANOTHER_PROBE_ALT_IPS_ERROR_CODE = 5004;
 
 export type AdoptedProbe = {
 	id: string;
@@ -222,7 +226,7 @@ export class AdoptedProbes {
 	}
 
 	private async fetchAdoptedProbes () {
-		const rows = await this.sql(ADOPTED_PROBES_TABLE).select<Row[]>();
+		const rows = await this.sql(ADOPTED_PROBES_TABLE).orderBy('id', 'desc').select<Row[]>();
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
@@ -361,10 +365,19 @@ export class AdoptedProbes {
 		} catch (err) {
 			const error = err as KnexError;
 
-			if (error && error.errno === ER_DUP_ENTRY_CODE) {
-				logger.warn(`Adopted probe duplication error: ${error.message}`);
+			if (error.errno === ER_DUP_ENTRY_CODE) {
+				logger.warn(`Adopted probe duplication warning: ${error.message}`);
 				await this.deleteDuplicates(currentAdoptedIp, connectedProbe);
 				await update();
+			} else if (error.errno === PRIMARY_IP_IN_ANOTHER_PROBE_ALT_IPS_ERROR_CODE) {
+				logger.warn(error.sqlMessage);
+				// Delete alt IP from found probe & retry.
+			} else if (error.errno === ALT_IP_IS_ANOTHER_PROBE_PRIMARY_IP_ERROR_CODE) {
+				logger.warn(error.sqlMessage);
+				// Delete found probe & retry?
+			} else if (error.errno === ALT_IP_IN_ANOTHER_PROBE_ALT_IPS_ERROR_CODE) {
+				// Delete alt IP from found probe & retry.
+				logger.warn(error.sqlMessage);
 			} else {
 				throw error;
 			}
