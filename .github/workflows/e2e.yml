@@ -45,10 +45,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
-      - name: Build
-        run: |
-          npm ci
-          npm run build
       - uses: fscarmen/warp-on-actions@v1.3
       - name: Enable IPv6 for Docker containers
         run: |
