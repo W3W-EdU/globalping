@@ -18,7 +18,7 @@
 		"config": "^3.3.12",
 		"countries-list": "^3.1.1",
 		"crypto-random-string": "^5.0.0",
-		"csv-parser": "^3.0.0",
+		"csv-parser": "^3.2.0",
 		"elastic-apm-node": "^4.9.0",
 		"elastic-apm-utils": "^4.1.1",
 		"got": "^14.4.5",
