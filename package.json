@@ -10,7 +10,7 @@
 		"@koa/router": "^13.1.0",
 		"@maxmind/geoip2-node": "^5.0.0",
 		"@redocly/openapi-core": "^1.26.0",
-		"@scure/base": "^1.2.1",
+		"@scure/base": "^1.2.4",
 		"@socket.io/redis-adapter": "^8.3.0",
 		"adm-zip": "^0.5.16",
 		"any-ascii": "^0.3.2",
